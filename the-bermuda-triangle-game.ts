@@ -67,6 +67,22 @@ const pieces: Piece[] = [
     [y, k, b],
 ];
 
+/**
+ * Numbering of spots by Row and "Column" (number in the row)
+ * 
+ * Odd columns always have dots on the left, right, and bottom.
+ * Even columns always have dots on the top, left, and right.
+ * 
+ * @example
+ *             1.1
+ *         2.1 2.2 2.3
+ *     3.1 3.2 3.3 3.4 3.5
+ * 4.1 4.2 4.3 4.4 4.5 4.6 4.7
+ */
+
+/** Determine the orientation (fit) for the piece to match the 2 dots given.
+ * @returns A number 0-2 representing the fit or undefined
+ */
 const fitWithTwoSidesOrUndefined = (
     firstDot: Dot,
     secondDot: Dot,

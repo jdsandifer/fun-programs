@@ -346,10 +346,21 @@ const pieceIndexes: Choice[] = new Array(16)
 
 // console.log('\nSolving the first square only...')
 // solvePuzzle(pieceIndexes, [[false]] as unknown as Arrangement)
+// 4 solutions
+
+// totalSolutions = 0
+// console.log('\nSolving the first two rows only...')
+// solvePuzzle(pieceIndexes, [
+// 	[false],
+// 	[false, false, false],
+// ] as unknown as Arrangement)
+// 165 solutions or so
 
 totalSolutions = 0
-console.log('\nSolving the first two rows only...')
+console.log('\nSolving the first three rows only...')
 solvePuzzle(pieceIndexes, [
 	[false],
 	[false, false, false],
+	[false, false, false, false, false],
 ] as unknown as Arrangement)
+// 773 solutions

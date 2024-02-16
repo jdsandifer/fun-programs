@@ -86,9 +86,7 @@ type Rotation = 0 | 1 | 2;
 
 /** How a piece is placed in the puzzle */
 type Placement = {
-    /** Index in piece array */
-    piece: Piece;
-    /** Index of rotation of the piece */
+    piece: Choice;
     rotation: Rotation;
 } | undefined;
 
@@ -99,6 +97,9 @@ type Arrangement = [
     [Placement, Placement, Placement, Placement, Placement],
     [Placement, Placement, Placement, Placement, Placement, Placement, Placement],
 ]
+
+/** Index number from pieces list. */
+type Choice = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
 
 
 
@@ -198,25 +199,40 @@ const nextOpentSpot = (placements: Arrangement): Position | undefined => {
 /** Determine the pieces that need to match at a spot. */
 const situationAtSpot = (placements: Arrangement, spot: Position): DotSituation => ([leftSide[0], rightSide[0]])
 
+const displaySolution = (arrangement: Arrangement) => {
+    for (let row = 0; row < arrangement.length; row++) {
+        let rowDisplay = ''
+        for (let col = 0; col < arrangement[row].length; col++) {
+            const placement = arrangement[row][col]
+            const { piece, rotation } = placement || {}
+            rowDisplay += `${piece}.${rotation} `
+        }
+        console.log(rowDisplay)
+    }
+}
+
+let totalSolutions = 0
+
 // Recursive function?
 // Need to pass pieces available, pieces used (empty space on grid), next spot
-const solvePuzzle = (availablePieces: Piece[], placementsSoFar: Arrangement): void => {
+const solvePuzzle = (availableIndexes: Choice[], placementsSoFar: Arrangement): void => {
     const spot = nextOpentSpot(placementsSoFar as Arrangement)
 
     if (!spot) {
-        console.log("Solved!")
-        console.log('hi', placementsSoFar)
+        console.log("Solution number %i!", ++totalSolutions)
+        displaySolution(placementsSoFar)
         return
     }
 
     const situation = situationAtSpot(placementsSoFar as Arrangement, spot)
-    availablePieces.forEach(p => {
-        const fits = fitsThatMatchTheConstraints(situation, p)
+    availableIndexes.forEach(i => {
+        const piece = pieces[i]
+        const fits = fitsThatMatchTheConstraints(situation, piece)
         fits.forEach(f => {
-            const newAvailablePieces = availablePieces.filter(p2 => p2 !== p)
+            const newAvailablePieces = availableIndexes.filter(i2 => i2 !== i)
 
             const newArrangement = placementsSoFar
-            newArrangement[spot.row][spot.col] = { piece: p, rotation: f };
+            newArrangement[spot.row][spot.col] = { piece: i, rotation: f };
 
             solvePuzzle(newAvailablePieces, newArrangement)
         })
@@ -229,6 +245,11 @@ const emptyPuzzle: Arrangement = [
     [undefined, undefined, undefined],
     [undefined, undefined, undefined, undefined, undefined],
     [undefined, undefined, undefined, undefined, undefined, undefined, undefined],
-
 ]
-solvePuzzle(pieces, [[undefined]] as unknown as Arrangement)
+const pieceIndexes: Choice[] = new Array(16).fill(undefined).map((_m, i) => i as Choice)
+
+console.log('Solving the first square only...')
+solvePuzzle(pieceIndexes, [[undefined],] as unknown as Arrangement)
+
+console.log('Solving the first two rows only...')
+solvePuzzle(pieceIndexes, [[undefined], [[undefined], [undefined], [undefined]],] as unknown as Arrangement)

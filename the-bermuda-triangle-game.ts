@@ -7,7 +7,8 @@
  * To solve the puzzle, match the colored dots where sides of the pieces touch
  * and where they align with the dots on the sides of the board.
  *
- * AFAIK, there is only one solution...
+ * There are well over 900 QUINTILLION (9 x 10^20) ways to randomly arrange
+ * the pieces on the board but only 8 valid solutions to the puzzle!
  */
 
 //
@@ -45,22 +46,22 @@ const rightSide: BoardSide = [b, r, g, k]
 const bottomSide: BoardSide = [g, g, w, g]
 
 const pieces: Piece[] = [
-	[r, k, g], // 0
-	[r, w, y],
-	[y, w, g],
-	[b, k, w], // 3
-	[y, g, b],
-	[b, w, w],
-	[r, k, g], // 6
-	[r, g, k],
-	[g, k, k],
-	[y, g, k], // 9
+	[r, g, y], // 0
 	[r, g, w],
+	[r, g, k],
+	[r, w, y], // 3
+	[r, k, g],
+	[r, k, g],
+	[y, g, b], // 6
+	[y, g, k],
 	[y, w, g],
-	[b, k, w], // 12
-	[r, g, y],
-	[b, b, w],
-	[y, k, b], // 15
+	[y, w, g], // 9
+	[y, k, b],
+	[g, k, k],
+	[b, b, w], // 12
+	[b, w, w],
+	[b, k, w],
+	[b, k, w], // 15
 ]
 
 /**
@@ -280,17 +281,15 @@ const solvePuzzle = (
 	placementsSoFar: Arrangement,
 	recursionLevel: number = 0
 ): void => {
-	// if (totalSolutions >= 5) return
 	const spot = nextOpentSpot(placementsSoFar as Arrangement)
 
 	if (!spot) {
-		console.log('Solution number %i!', ++totalSolutions)
+		console.log('\nSolution number %i:', ++totalSolutions)
 		displayArrangement(placementsSoFar)
 		return
 	}
 
 	const situation = situationAtSpot(placementsSoFar as Arrangement, spot)
-	console.log(situation)
 	availableIndexes.forEach((i) => {
 		// Skip the pieces no longer available
 		if (i === false) return
@@ -310,15 +309,15 @@ const solvePuzzle = (
 	})
 }
 
+//
+// Run stuff and display results
+//
+
 console.log('\nStarting solver')
 console.log('There are 16 pieces and each has 3 possible orientations.')
 console.log(
 	'That means there are (16 * 3) * (15 * 3) * ... * (1 * 3) possible arrangements.'
 )
-
-//
-// Run stuff and display results
-//
 
 const possibilities = new Array(16)
 	.fill(undefined)
@@ -330,16 +329,8 @@ const possibilities = new Array(16)
 	)
 
 console.log(
-	"That's %i possible ways to orient the pieces in the puzzle!",
-	possibilities
+	`That's ${possibilities.toLocaleString()} possible ways to orient the pieces in the puzzle!`
 )
-
-const emptyPuzzle: Arrangement = [
-	[false],
-	[false, false, false],
-	[false, false, false, false, false],
-	[false, false, false, false, false, false, false],
-]
 const pieceIndexes: Choice[] = new Array(16)
 	.fill(undefined)
 	.map((_m, i) => i as Choice)
@@ -354,13 +345,26 @@ const pieceIndexes: Choice[] = new Array(16)
 // 	[false],
 // 	[false, false, false],
 // ] as unknown as Arrangement)
-// 165 solutions or so
+// 30 solutions
+
+// totalSolutions = 0
+// console.log('\nSolving the first three rows only...')
+// solvePuzzle(pieceIndexes, [
+// 	[false],
+// 	[false, false, false],
+// 	[false, false, false, false, false],
+// ] as unknown as Arrangement)
+// 773 solutions
 
 totalSolutions = 0
-console.log('\nSolving the first three rows only...')
-solvePuzzle(pieceIndexes, [
+console.log('\nSolving the whole puzzle...')
+const emptyPuzzle: Arrangement = [
 	[false],
 	[false, false, false],
 	[false, false, false, false, false],
-] as unknown as Arrangement)
-// 773 solutions
+	[false, false, false, false, false, false, false],
+]
+solvePuzzle(pieceIndexes, emptyPuzzle)
+// 8 solutions
+
+console.log('\n')

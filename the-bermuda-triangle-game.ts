@@ -71,10 +71,10 @@ const pieces: Piece[] = [
  *     3.1 3.2 3.3 3.4 3.5
  * 4.1 4.2 4.3 4.4 4.5 4.6 4.7
  */
-type Row = number
-type Column = number
-type Position = `${Row}.${Column}`
-
+type Position = {
+    row: number,
+    col: number
+}
 /** 
  * A representation of the already decided dots around a piece.
  * Depending on the location in the puzzle, 1, 2, or 3 may be locked in.
@@ -84,13 +84,21 @@ type DotSituation = [Dot] | [Dot, Dot] | [Dot, Dot, Dot]
 /** Index of rotation of the piece for a specific arrangement */
 type Rotation = 0 | 1 | 2;
 
-/** How a piece fits in the puzzle */
-type Fits = {
+/** How a piece is placed in the puzzle */
+type Placement = {
     /** Index in piece array */
-    piece: number;
+    piece: Piece;
     /** Index of rotation of the piece */
-    rotations: Rotation[];
-};
+    rotation: Rotation;
+} | undefined;
+
+/** Piece arrangement in the puzzle. */
+type Arrangement = [
+    [Placement],
+    [Placement, Placement, Placement],
+    [Placement, Placement, Placement, Placement, Placement],
+    [Placement, Placement, Placement, Placement, Placement, Placement, Placement],
+]
 
 
 
@@ -173,3 +181,54 @@ const piecesWithABlueDot = pieces
     .filter(([rotations]) => rotations.length > 0)
     .map(([rotations, index]) => ({ piece: index, fits: rotations }));
 console.log(piecesWithABlueDot);
+
+
+/** Find the next open space to check for matching pieces. */
+const nextOpentSpot = (placements: Arrangement): Position | undefined => {
+    for (let row = 0; row < placements.length; row++) {
+        for (let col = 0; col < placements[row].length; col++) {
+            if (placements[row][col] === undefined) {
+                return { row, col }
+            }
+        }
+    }
+    return undefined
+}
+
+/** Determine the pieces that need to match at a spot. */
+const situationAtSpot = (placements: Arrangement, spot: Position): DotSituation => ([leftSide[0], rightSide[0]])
+
+// Recursive function?
+// Need to pass pieces available, pieces used (empty space on grid), next spot
+const solvePuzzle = (availablePieces: Piece[], placementsSoFar: Arrangement): void => {
+    const spot = nextOpentSpot(placementsSoFar as Arrangement)
+
+    if (!spot) {
+        console.log("Solved!")
+        console.log('hi', placementsSoFar)
+        return
+    }
+
+    const situation = situationAtSpot(placementsSoFar as Arrangement, spot)
+    availablePieces.forEach(p => {
+        const fits = fitsThatMatchTheConstraints(situation, p)
+        fits.forEach(f => {
+            const newAvailablePieces = availablePieces.filter(p2 => p2 !== p)
+
+            const newArrangement = placementsSoFar
+            newArrangement[spot.row][spot.col] = { piece: p, rotation: f };
+
+            solvePuzzle(newAvailablePieces, newArrangement)
+        })
+
+    })
+}
+
+const emptyPuzzle: Arrangement = [
+    [undefined],
+    [undefined, undefined, undefined],
+    [undefined, undefined, undefined, undefined, undefined],
+    [undefined, undefined, undefined, undefined, undefined, undefined, undefined],
+
+]
+solvePuzzle(pieces, [[undefined]] as unknown as Arrangement)

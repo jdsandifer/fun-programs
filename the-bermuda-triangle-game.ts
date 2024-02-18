@@ -45,6 +45,9 @@ const rightSide: BoardSide = [b, r, g, k]
 // Bottom is listed left to right
 const bottomSide: BoardSide = [g, g, w, g]
 
+// TODO: I realized that there are three sets of duplicate pieces in this list.
+// To get unique solutions, I'll need to list each *type* of piece and the
+// quantity available.
 const pieces: Piece[] = [
 	[r, g, y], // 0
 	[r, g, w],
@@ -337,7 +340,7 @@ const pieceIndexes: Choice[] = new Array(16)
 
 // console.log('\nSolving the first square only...')
 // solvePuzzle(pieceIndexes, [[false]] as unknown as Arrangement)
-// 4 solutions
+// 4 solutions - 3 unique
 
 // totalSolutions = 0
 // console.log('\nSolving the first two rows only...')
@@ -345,7 +348,7 @@ const pieceIndexes: Choice[] = new Array(16)
 // 	[false],
 // 	[false, false, false],
 // ] as unknown as Arrangement)
-// 30 solutions
+// 30 solutions - 18 unique
 
 // totalSolutions = 0
 // console.log('\nSolving the first three rows only...')
@@ -354,7 +357,7 @@ const pieceIndexes: Choice[] = new Array(16)
 // 	[false, false, false],
 // 	[false, false, false, false, false],
 // ] as unknown as Arrangement)
-// 773 solutions
+// 773 solutions - ??? unique
 
 totalSolutions = 0
 console.log('\nSolving the whole puzzle...')
@@ -365,6 +368,6 @@ const emptyPuzzle: Arrangement = [
 	[false, false, false, false, false, false, false],
 ]
 solvePuzzle(pieceIndexes, emptyPuzzle)
-// 8 solutions
+// 8 solutions - 1 unique
 
 console.log('\n')

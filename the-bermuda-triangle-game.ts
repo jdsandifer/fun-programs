@@ -8,7 +8,8 @@
  * and where they align with the dots on the sides of the board.
  *
  * There are well over 900 QUINTILLION (9 x 10^20) ways to randomly arrange
- * the pieces on the board but only 8 valid solutions to the puzzle!
+ * the pieces on the board but there's only 1 unique solution to the puzzle!
+ * (There are 3 duplicate pieces so there are 8 duplicate solutions.)
  */
 
 //
@@ -29,7 +30,7 @@ type BoardSide = Dot[]
  * -------------
  * with the lower case letters each representing a dot.
  */
-type Piece = Dot[]
+type Type = Dot[]
 
 // Color abbreviations
 const r: Dot = 'Red'
@@ -45,10 +46,18 @@ const rightSide: BoardSide = [b, r, g, k]
 // Bottom is listed left to right
 const bottomSide: BoardSide = [g, g, w, g]
 
+// Since some pieces have duplicates, this will allow me to deal with them
+// as unique types with quantities to avoid listing redundant solutions.
+type PieceQuatity = {
+	/** Unique dot layout */
+	type: Type
+	quantity: 1 | 2
+}
+
 // TODO: I realized that there are three sets of duplicate pieces in this list.
 // To get unique solutions, I'll need to list each *type* of piece and the
 // quantity available.
-const pieces: Piece[] = [
+const types: Type[] = [
 	[r, g, y], // 0
 	[r, g, w],
 	[r, g, k],
@@ -89,7 +98,11 @@ type Position = {
  */
 type DotSituation = [Dot] | [Dot, Dot] | [Dot, Dot, Dot]
 
-/** Index of rotation of the piece for a specific arrangement */
+/**
+ * Index of rotation of the piece for a specific arrangement.
+ * 0 is no rotation, 1 means the second dot is now first, and 2 means the
+ * last dot is now first. (Counter-clockwise steps since the dots are
+ * described in clockwise order) */
 type Rotation = 0 | 1 | 2
 
 /** How a piece is placed in the puzzle */
@@ -145,7 +158,7 @@ type Choice =
  */
 const fitsThatMatchTheConstraints = (
 	dots: DotSituation,
-	piece: Piece
+	piece: Type
 ): Rotation[] => {
 	const rotationsToTry = [0, 1, 2]
 	const fitWorks = rotationsToTry.map((rotation) => {
@@ -185,7 +198,7 @@ const getSideOfPiece = (sideIndex: number, placement: Placement): Dot => {
 		throw Error("Can't get piece side without a piece!")
 	}
 	const { piece: pieceNumber, rotation } = placement
-	const piece = pieces[pieceNumber]
+	const piece = types[pieceNumber]
 	const finalSide = (sideIndex + rotation) % 3
 	return piece[finalSide]
 }
@@ -297,7 +310,7 @@ const solvePuzzle = (
 		// Skip the pieces no longer available
 		if (i === false) return
 
-		const piece = pieces[i]
+		const piece = types[i]
 		const fits = fitsThatMatchTheConstraints(situation, piece)
 		fits.forEach((f) => {
 			const newAvailableIndexes = availableIndexes.map(

@@ -19,7 +19,7 @@
 type Dot = 'Red' | 'Yellow' | 'Green' | 'Blue' | 'White' | 'Black'
 
 /** There are 4 colored dots per side of the board */
-type BoardSide = Dot[]
+type BoardSide = [Dot, Dot, Dot, Dot]
 
 /** There are 3 colored dots per piece, listed in clockwise order
  * @example ['Red', 'Yellow', 'Blue'] represents a piece that looks like:
@@ -30,7 +30,7 @@ type BoardSide = Dot[]
  * -------------
  * with the lower case letters each representing a dot.
  */
-type Type = Dot[]
+type Type = [Dot, Dot, Dot]
 
 // Color abbreviations
 const r: Dot = 'Red'
@@ -48,33 +48,100 @@ const bottomSide: BoardSide = [g, g, w, g]
 
 // Since some pieces have duplicates, this will allow me to deal with them
 // as unique types with quantities to avoid listing redundant solutions.
-type PieceQuatity = {
+type PieceQuantity = {
 	/** Unique dot layout */
 	type: Type
-	quantity: 1 | 2
+	quantity: 0 | 1 | 2
 }
 
-// TODO: I realized that there are three sets of duplicate pieces in this list.
-// To get unique solutions, I'll need to list each *type* of piece and the
-// quantity available.
-const types: Type[] = [
-	[r, g, y], // 0
-	[r, g, w],
-	[r, g, k],
-	[r, w, y], // 3
-	[r, k, g],
-	[r, k, g],
-	[y, g, b], // 6
-	[y, g, k],
-	[y, w, g],
-	[y, w, g], // 9
-	[y, k, b],
-	[g, k, k],
-	[b, b, w], // 12
-	[b, w, w],
-	[b, k, w],
-	[b, k, w], // 15
+// There are 13 piece types so the list will always have 13 items.
+type PieceQuantityList = [
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity,
+	PieceQuantity
 ]
+
+// A list of unique types and their quantities. (There are 3 duplicate pieces.)
+const typesAndQuantities: PieceQuantityList = [
+	// 0
+	{
+		type: [r, g, y],
+		quantity: 1,
+	},
+	// 1
+	{
+		type: [r, g, w],
+		quantity: 1,
+	},
+	// 2
+	{
+		type: [r, g, k],
+		quantity: 1,
+	},
+	// 3
+	{
+		type: [r, w, y],
+		quantity: 1,
+	},
+	//4
+	{
+		type: [r, k, g],
+		quantity: 2,
+	},
+	//5
+	{
+		type: [y, g, b],
+		quantity: 1,
+	},
+	// 6
+	{
+		type: [y, g, k],
+		quantity: 1,
+	},
+	// 7
+	{
+		type: [y, w, g],
+		quantity: 2,
+	},
+	// 8
+	{
+		type: [y, k, b],
+		quantity: 1,
+	},
+	// 9
+	{
+		type: [g, k, k],
+		quantity: 1,
+	},
+	// 10
+	{
+		type: [b, b, w],
+		quantity: 1,
+	},
+	// 11
+	{
+		type: [b, w, w],
+		quantity: 1,
+	},
+	// 12
+	{
+		type: [b, k, w],
+		quantity: 2,
+	},
+] as const
+
+/** Index number from pieces list. */
+type Choice = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 
 /**
  * Numbering of spot indexes by Row and "Column" (number in the row)
@@ -129,25 +196,6 @@ type Arrangement = [
 	]
 ]
 
-/** Index number from pieces list. */
-type Choice =
-	| 0
-	| 1
-	| 2
-	| 3
-	| 4
-	| 5
-	| 6
-	| 7
-	| 8
-	| 9
-	| 10
-	| 11
-	| 12
-	| 13
-	| 14
-	| 15
-
 //
 // Functions to help solve the puzzle
 //
@@ -198,7 +246,7 @@ const getSideOfPiece = (sideIndex: number, placement: Placement): Dot => {
 		throw Error("Can't get piece side without a piece!")
 	}
 	const { piece: pieceNumber, rotation } = placement
-	const piece = types[pieceNumber]
+	const piece = typesAndQuantities[pieceNumber].type
 	const finalSide = (sideIndex + rotation) % 3
 	return piece[finalSide]
 }
@@ -290,10 +338,9 @@ const cloneArrangement = (arrangement: Arrangement): Arrangement => {
 }
 
 let totalSolutions = 0
-// Recursive function?
-// Need to pass pieces available, pieces used (empty space on grid), next spot
+
 const solvePuzzle = (
-	availableIndexes: (Choice | false)[],
+	availablePieces: PieceQuantityList,
 	placementsSoFar: Arrangement,
 	recursionLevel: number = 0
 ): void => {
@@ -306,21 +353,31 @@ const solvePuzzle = (
 	}
 
 	const situation = situationAtSpot(placementsSoFar as Arrangement, spot)
-	availableIndexes.forEach((i) => {
-		// Skip the pieces no longer available
-		if (i === false) return
+	availablePieces.forEach((_piece, availableIndex) => {
+		const piece = typesAndQuantities[availableIndex]
 
-		const piece = types[i]
-		const fits = fitsThatMatchTheConstraints(situation, piece)
-		fits.forEach((f) => {
-			const newAvailableIndexes = availableIndexes.map(
-				// Use false to remove pieces so we don't change the indexes
-				(i2) => (i2 === i ? false : i2)
-			)
+		// Skip fully used pieces
+		if (piece.quantity <= 0) {
+			return
+		}
+
+		const fits = fitsThatMatchTheConstraints(situation, piece.type)
+		fits.forEach((fit) => {
+			const newAvailablePieces = availablePieces.map(
+				({ type, quantity }, i2) => ({
+					type,
+					quantity: availableIndex === i2 ? --quantity : quantity,
+				})
+			) as PieceQuantityList
+
 			const newArrangement = cloneArrangement(placementsSoFar)
-			newArrangement[spot.row][spot.col] = { piece: i, rotation: f }
+			newArrangement[spot.row][spot.col] = {
+				piece: availableIndex as Choice,
+				rotation: fit,
+			}
+			console.log()
 
-			solvePuzzle(newAvailableIndexes, newArrangement, recursionLevel + 1)
+			solvePuzzle(newAvailablePieces, newArrangement, recursionLevel + 1)
 		})
 	})
 }
@@ -347,20 +404,21 @@ const possibilities = new Array(16)
 console.log(
 	`That's ${possibilities.toLocaleString()} possible ways to orient the pieces in the puzzle!`
 )
-const pieceIndexes: Choice[] = new Array(16)
-	.fill(undefined)
-	.map((_m, i) => i as Choice)
+const allPieceQuantities = typesAndQuantities.map((piece) => ({
+	...piece,
+})) as PieceQuantityList
+console.log(allPieceQuantities)
 
-// console.log('\nSolving the first square only...')
+// console.log('\nSolving the first piece only...')
 // solvePuzzle(pieceIndexes, [[false]] as unknown as Arrangement)
 // 4 solutions - 3 unique
 
-// totalSolutions = 0
-// console.log('\nSolving the first two rows only...')
-// solvePuzzle(pieceIndexes, [
-// 	[false],
-// 	[false, false, false],
-// ] as unknown as Arrangement)
+totalSolutions = 0
+console.log('\nSolving the first two rows only...')
+solvePuzzle(allPieceQuantities, [
+	[false],
+	[false, false, false],
+] as unknown as Arrangement)
 // 30 solutions - 18 unique
 
 // totalSolutions = 0
@@ -372,15 +430,15 @@ const pieceIndexes: Choice[] = new Array(16)
 // ] as unknown as Arrangement)
 // 773 solutions - ??? unique
 
-totalSolutions = 0
-console.log('\nSolving the whole puzzle...')
-const emptyPuzzle: Arrangement = [
-	[false],
-	[false, false, false],
-	[false, false, false, false, false],
-	[false, false, false, false, false, false, false],
-]
-solvePuzzle(pieceIndexes, emptyPuzzle)
+// totalSolutions = 0
+// console.log('\nSolving the whole puzzle...')
+// const emptyPuzzle: Arrangement = [
+// 	[false],
+// 	[false, false, false],
+// 	[false, false, false, false, false],
+// 	[false, false, false, false, false, false, false],
+// ]
+// solvePuzzle(pieceIndexes, emptyPuzzle)
 // 8 solutions - 1 unique
 
 console.log('\n')
